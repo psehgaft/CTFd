@@ -1,7 +1,31 @@
+#################
+# oc process -f ctfd-template.yaml \
+#  -p CTFD_IMAGE=image-registry.openshift-image-registry.svc:5000/ctf/ctfd \
+#  -p CTFD_SECRET_KEY=supersecret123 \
+#  -p POSTGRES_PASSWORD=mydbpass123 \
+#  | oc apply -f -
+##################
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: ctfd-template
+  annotations:
+    description: "CTFd deployment template for OpenShift 4.18+"
+parameters:
+  - name: CTFD_IMAGE
+    description: Image to use for CTFd
+    required: true
+    value: image-registry.openshift-image-registry.svc:5000/ctf/ctfd
+  - name: CTFD_SECRET_KEY
+    description: Secret key for session security
+    required: true
+    value: CHANGEME_SUPER_SECRET
+  - name: POSTGRES_PASSWORD
+    description: Password for PostgreSQL user
+    required: true
+    value: changeme123
+objects:
 
-apiVersion: v1
-kind: List
-items:
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
@@ -45,10 +69,7 @@ items:
                 - name: POSTGRES_USER
                   value: ctfd
                 - name: POSTGRES_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: ctfd-db-secret
-                      key: password
+                  value: ${POSTGRES_PASSWORD}
               ports:
                 - containerPort: 5432
               volumeMounts:
@@ -135,7 +156,7 @@ items:
         spec:
           containers:
             - name: ctfd
-              image: image-registry.openshift-image-registry.svc:5000/ctf/ctfd
+              image: ${CTFD_IMAGE}
               imagePullPolicy: Always
               env:
                 - name: DATABASE_URL
@@ -143,7 +164,7 @@ items:
                 - name: REDIS_URL
                   value: redis://ctfd-redis:6379/0
                 - name: SECRET_KEY
-                  value: CHANGEME_SUPER_SECRET
+                  value: ${CTFD_SECRET_KEY}
                 - name: UPLOAD_FOLDER
                   value: /var/uploads
                 - name: WORKERS
