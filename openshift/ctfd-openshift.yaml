@@ -23,7 +23,7 @@ parameters:
   - name: POSTGRES_PASSWORD
     description: Password for PostgreSQL user
     required: true
-    value: changeme123
+    value: mydbpass123
 objects:
 
   - apiVersion: v1
