@@ -1,31 +1,23 @@
-#################
-# oc process -f ctfd-openshift.yaml \
-#  -p CTFD_IMAGE=image-registry.openshift-image-registry.svc:5000/ctf/ctfd \
-#  -p CTFD_SECRET_KEY=supersecret123 \
-#  -p POSTGRES_PASSWORD=mydbpass123 \
-#  | oc apply -f -
-##################
+
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
   name: ctfd-template
-  annotations:
-    description: "CTFd deployment template for OpenShift 4.18+"
 parameters:
   - name: CTFD_IMAGE
-    description: Image to use for CTFd
-    required: true
     value: image-registry.openshift-image-registry.svc:5000/ctf/ctfd
   - name: CTFD_SECRET_KEY
-    description: Secret key for session security
-    required: true
-    value: CHANGEME_SUPER_SECRET
+    value: supersecretkey
   - name: POSTGRES_PASSWORD
-    description: Password for PostgreSQL user
-    required: true
-    value: mydbpass123
+    value: changeme123
 objects:
-
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: ctfd-db-secret
+    type: Opaque
+    stringData:
+      password: ${POSTGRES_PASSWORD}
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
@@ -48,8 +40,6 @@ objects:
     kind: Deployment
     metadata:
       name: ctfd-postgres
-      labels:
-        app: ctfd-postgres
     spec:
       replicas: 1
       selector:
@@ -69,36 +59,23 @@ objects:
                 - name: POSTGRES_USER
                   value: ctfd
                 - name: POSTGRES_PASSWORD
-                  value: ${POSTGRES_PASSWORD}
+                  valueFrom:
+                    secretKeyRef:
+                      name: ctfd-db-secret
+                      key: password
               ports:
                 - containerPort: 5432
               volumeMounts:
                 - mountPath: /var/lib/postgresql/data
-                  name: ctfd-postgres-data
-              resources:
-                requests:
-                  memory: "256Mi"
-                  cpu: "250m"
-                limits:
-                  memory: "512Mi"
-                  cpu: "500m"
+                  name: postgres-data
           volumes:
-            - name: ctfd-postgres-data
+            - name: postgres-data
               persistentVolumeClaim:
                 claimName: ctfd-postgres-pvc
-  - apiVersion: v1
-    kind: Secret
-    metadata:
-      name: ctfd-db-secret
-    type: Opaque
-    stringData:
-      password: changeme123
   - apiVersion: apps/v1
     kind: Deployment
     metadata:
       name: ctfd-redis
-      labels:
-        app: ctfd-redis
     spec:
       replicas: 1
       selector:
@@ -117,23 +94,6 @@ objects:
               volumeMounts:
                 - name: redis-data
                   mountPath: /data
-              readinessProbe:
-                tcpSocket:
-                  port: 6379
-                initialDelaySeconds: 5
-                periodSeconds: 10
-              livenessProbe:
-                tcpSocket:
-                  port: 6379
-                initialDelaySeconds: 15
-                periodSeconds: 20
-              resources:
-                requests:
-                  memory: "128Mi"
-                  cpu: "100m"
-                limits:
-                  memory: "256Mi"
-                  cpu: "200m"
           volumes:
             - name: redis-data
               persistentVolumeClaim:
@@ -142,8 +102,6 @@ objects:
     kind: Deployment
     metadata:
       name: ctfd
-      labels:
-        app: ctfd
     spec:
       replicas: 1
       selector:
@@ -154,48 +112,40 @@ objects:
           labels:
             app: ctfd
         spec:
+          initContainers:
+            - name: wait-for-postgres
+              image: busybox
+              command: ['sh', '-c', 'until nc -z ctfd-postgres 5432; do echo waiting for postgres; sleep 2; done;']
           containers:
             - name: ctfd
               image: ${CTFD_IMAGE}
-              imagePullPolicy: Always
               env:
                 - name: DATABASE_URL
-                  value: postgresql://ctfd:changeme123@ctfd-postgres:5432/ctfd
+                  value: postgresql://ctfd:${POSTGRES_PASSWORD}@ctfd-postgres:5432/ctfd
                 - name: REDIS_URL
                   value: redis://ctfd-redis:6379/0
                 - name: SECRET_KEY
                   value: ${CTFD_SECRET_KEY}
                 - name: UPLOAD_FOLDER
                   value: /var/uploads
-                - name: WORKERS
-                  value: "4"
               ports:
                 - containerPort: 8000
-              readinessProbe:
-                httpGet:
-                  path: /health
-                  port: 8000
-                initialDelaySeconds: 15
-                periodSeconds: 20
-              livenessProbe:
-                httpGet:
-                  path: /health
-                  port: 8000
-                initialDelaySeconds: 30
-                periodSeconds: 30
               volumeMounts:
                 - name: uploads
                   mountPath: /var/uploads
-              resources:
-                requests:
-                  memory: "512Mi"
-                  cpu: "500m"
-                limits:
-                  memory: "1Gi"
-                  cpu: "1"
           volumes:
             - name: uploads
               emptyDir: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ctfd
+    spec:
+      ports:
+        - port: 80
+          targetPort: 8000
+      selector:
+        app: ctfd
   - apiVersion: v1
     kind: Service
     metadata:
@@ -216,19 +166,6 @@ objects:
           targetPort: 6379
       selector:
         app: ctfd-redis
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      name: ctfd
-      annotations:
-        service.beta.openshift.io/serving-cert-secret-name: ctfd-tls
-    spec:
-      ports:
-        - port: 80
-          targetPort: 8000
-      selector:
-        app: ctfd
-      type: ClusterIP
   - apiVersion: route.openshift.io/v1
     kind: Route
     metadata:
