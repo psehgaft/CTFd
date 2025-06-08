@@ -5,7 +5,6 @@ FROM registry.access.redhat.com/ubi8/python-312 AS builder
 USER 0
 WORKDIR /opt/CTFd
 
-# Install system dependencies for building Python packages, including psycopg2
 RUN yum install -y \
     gcc \
     git \
@@ -38,4 +37,4 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 EXPOSE 8000
 
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "CTFd:create_app()"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "--timeout", "120", "CTFd:create_app()"]
