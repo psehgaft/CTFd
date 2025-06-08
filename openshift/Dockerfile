@@ -1,12 +1,16 @@
 # --- Build stage ---
     FROM registry.access.redhat.com/ubi8/python-312 AS builder
 
-    USER 1001
+    # 👇 Cambiar a root para poder usar yum
+    USER 0
     WORKDIR /opt/CTFd
     
     RUN yum install -y gcc git make libffi-devel openssl-devel && \
         python -m venv /opt/venv && \
         yum clean all
+    
+    # 👇 Cambiar a un usuario sin privilegios (como exige OpenShift)
+    USER 1001
     
     ENV PATH="/opt/venv/bin:$PATH"
     
