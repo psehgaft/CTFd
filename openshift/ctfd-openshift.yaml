@@ -1,5 +1,5 @@
 #################
-# oc process -f ctfd-template.yaml \
+# oc process -f ctfd-openshift.yaml \
 #  -p CTFD_IMAGE=image-registry.openshift-image-registry.svc:5000/ctf/ctfd \
 #  -p CTFD_SECRET_KEY=supersecret123 \
 #  -p POSTGRES_PASSWORD=mydbpass123 \
