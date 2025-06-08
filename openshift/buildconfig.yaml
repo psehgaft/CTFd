@@ -18,7 +18,7 @@ spec:
     type: Git
     git:
       uri: https://github.com/psehgaft/CTFd.git
-    contextDir: ./openshift
+    contextDir: openshift
   strategy:
     type: Docker
     dockerStrategy:
