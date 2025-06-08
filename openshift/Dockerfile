@@ -2,15 +2,14 @@
 # --- Build stage ---
 FROM registry.access.redhat.com/ubi8/python-312 AS builder
 
-# Must be root to install system packages
 USER 0
 WORKDIR /opt/CTFd
 
 RUN yum install -y gcc git make libffi-devel openssl-devel && \
     python -m venv /opt/venv && \
+    chown -R 1001:0 /opt/venv && \
     yum clean all
 
-# Drop privileges before copying app
 USER 1001
 
 ENV PATH="/opt/venv/bin:$PATH"
