@@ -2,7 +2,7 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
-  name: ctfd-template
+  name: ctfd-template-scaled
 parameters:
   - name: CTFD_IMAGE
     value: image-registry.openshift-image-registry.svc:5000/ctf/ctfd
@@ -135,6 +135,13 @@ objects:
               volumeMounts:
                 - name: uploads
                   mountPath: /var/uploads
+              resources:
+                limits:
+                  memory: "1Gi"
+                  cpu: "1000m"
+                requests:
+                  memory: "512Mi"
+                  cpu: "500m"
           volumes:
             - name: uploads
               emptyDir: {}
