@@ -21,7 +21,7 @@ spec:
     contextDir: openshift
   strategy:
     type: Docker
-    dockerStrategy:
+    dockerStrategy: 
       forcePull: true
   triggers:
     - type: GitHub
