@@ -1,0 +1,35 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: ctfd
+  namespace: ctf
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: ctfd
+  namespace: ctf
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: ctfd:latest
+  source:
+    type: Git
+    git:
+      uri: https://github.com/psehgaft/CTFd.git
+    contextDir: .
+  strategy:
+    type: Docker
+    dockerStrategy:
+      forcePull: true
+  triggers:
+    - type: GitHub
+      github:
+        secret: secret101
+    - type: Generic
+      generic:
+        secret: secret101
+    - type: ConfigChange
+    - type: ImageChange
+  runPolicy: Serial
