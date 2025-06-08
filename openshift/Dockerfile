@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/python-312
+FROM registry.access.redhat.com/ubi8/python-312 AS builder
 
 USER 1001
 
@@ -27,7 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt \
     done;
 
 
-FROM python:3.11-slim-bookworm AS release
+FROM python:3.12-slim-bookworm AS release
+
 WORKDIR /opt/CTFd
 
 # hadolint ignore=DL3008
