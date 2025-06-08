@@ -19,9 +19,14 @@ spec:
     git:
       uri: https://github.com/psehgaft/CTFd.git
     contextDir: /
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
   strategy:
     type: Docker
     dockerStrategy:
+      from:
+        kind: DockerImage
+        name: registry.access.redhat.com/ubi8/python-312
       forcePull: true
   triggers:
     - type: GitHub
