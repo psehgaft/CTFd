@@ -17,18 +17,12 @@ spec:
   source:
     type: Git
     git:
-      uri: 'https://github.com/psehgaft/CTFd'
-    contextDir: /
-  successfulBuildsHistoryLimit: 5
-  failedBuildsHistoryLimit: 5
+      uri: https://github.com/psehgaft/CTFd.git
+    contextDir: openshift
   strategy:
-    type: Source
-    sourceStrategy:
-      from:
-        kind: DockerImage
-        name: registry.access.redhat.com/ubi8/python-312
+    type: Docker
+    dockerStrategy: 
       forcePull: true
-  postCommit: {}
   triggers:
     - type: GitHub
       github:
