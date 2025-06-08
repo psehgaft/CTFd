@@ -1,4 +1,6 @@
-FROM python:3.11-slim-bookworm AS build
+FROM registry.access.redhat.com/ubi8/python-312
+
+USER 1001
 
 WORKDIR /opt/CTFd
 
