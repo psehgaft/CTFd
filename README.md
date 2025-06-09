@@ -64,7 +64,7 @@ Openshift Crete project:
 
 Crete ImageStream:
 
-
+`oc create -f https://raw.githubusercontent.com/psehgaft/CTFd/refs/heads/master/openshift/buildconfig.yaml`
 
 ## Live Demo
 
