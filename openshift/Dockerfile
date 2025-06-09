@@ -22,7 +22,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY ../. /opt/CTFd
 
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt && pip install gevent
 
 # --- Runtime stage ---
 FROM registry.access.redhat.com/ubi8/python-312
@@ -37,4 +37,4 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 EXPOSE 8000
 
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "--timeout", "120", "--workers", "4", "CTFd:create_app()"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "--timeout", "180", "--workers", "4", "-k", "gevent", "CTFd:create_app()"]
