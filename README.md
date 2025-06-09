@@ -66,6 +66,10 @@ Crete ImageStream:
 
 `oc create -f https://raw.githubusercontent.com/psehgaft/CTFd/refs/heads/master/openshift/buildconfig.yaml`
 
+Deploy on OCP by template:
+
+`oc process -f https://raw.githubusercontent.com/psehgaft/CTFd/refs/heads/master/openshift/ctfd-openshift.yaml  -p CTFD_SECRET_KEY=mysecret123   -p POSTGRES_PASSWORD=supersecurepw   -p CTFD_IMAGE=image-registry.openshift-image-registry.svc:5000/ctf/ctfd   | oc apply -f -`
+
 ## Live Demo
 
 https://demo.ctfd.io/
