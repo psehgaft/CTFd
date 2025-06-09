@@ -184,6 +184,6 @@ objects:
         kind: Service
         name: ctfd
       port:
-        targetPort: 80
+        targetPort: 8000
       tls:
         termination: edge
